@@ -24,11 +24,10 @@ If `core/utils.c:3866:18: error: passing an object that undergoes default argume
 As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, install and turn it back again.)
 
 
-
 <br>
 
 ## 2. Create Database
-```
+```bash
 $ createdb relayo -E UTF8
 ```
 
@@ -37,7 +36,7 @@ $ createdb relayo -E UTF8
 ## 3. Run Migration
 
 Before run migration, run a command below first on fabric
-```
+```bash
 $ fab local_only updateconf
 [localhost] Executing task 'local_only'
 [localhost] Executing task 'updateconf'
@@ -63,7 +62,7 @@ Done.
 
 And run migrate
 
-```
+```bash
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py migrate
 ```
@@ -77,7 +76,7 @@ modify 'libgeos.py'
 
 Open `{your-virtualenv-path}/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
 
-```
+```python
 # before
 ver = geos_version()
 
@@ -88,7 +87,7 @@ ver = geos_version().split(' ')[0].decode()
 <br>
 
 ## 4. Run Daemon runserver
-```
+```bash
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py runserver
 ```
@@ -103,39 +102,40 @@ $ pip install kombu==3.0.30
 <br>
 
 ## 5. Run Celery Workers
-```
-$ cd relayo
+
+```bash
+$ cd $WORKDIR/relayo
 $ DJANGO_SETTINGS_MODULE=daemon.main.settings RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 ```
 
 With logging,
-```
+```bash
 $ export RELAYO_RUN_ENV=local
 $ export LOGGER_LOG_LEVEL=DEBUG
 $ python -m workers.app worker -l info
 ```
 
 To enable file logging, set following env variables.
-```
+```bash
 export LOGGER_LOG_PATH=/path/to/log_file.log
 export LOGGER_VERBOSE_LOG_PATH=/path/to/verbose_log_file.log
 ```
 
 To enable rsyslog, you need to prepare log path with the proper permission.
-```
+```bash
 $ mkdir -p /opt/relayo
 $ chown syslog:adm -R /opt/relayo
 ```
 
 And then, set env `LOGGER_USE_SYSLOG` to `true` before running celery workers.
-```
+```bash
 $ export LOGGER_USE_SYSLOG=true
 $ RELAYO_RUN_ENV=local python -m workers.app worker
 ```
 
 
 For dedicated workers for queue `order`.
-```
+```bash
 $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 ```
 
@@ -177,7 +177,8 @@ $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 
 ### Create a class reference document
 The exported class reference document would be located in `<Yor-project-directory>/relayo/docs/api/_build/html/index.html`
-```
+
+```bash
 $ cd relayo
 $ make doc
 $ make cleandoc # to clean docs/api
@@ -192,7 +193,7 @@ $ make cleandoc # to clean docs/api
 After installation, **you can be sure that your onboarding on relayo is successful after passing daemon tests.**  
 Let's check it out right now :)
 
-```
+```bash
 $ cd $WORKDIR/relayo
 $ RELAYO_RUN_ENV=test python daemon/manage.py test daemon --keepdb
 
@@ -210,7 +211,7 @@ You should pass all relayo daemon tests except for skipped ones.
 
 ### Create API Client for POS vendor
 
-```
+```bash
 $ cd relayo
 $ python daemon/manage.py createapiclient
 

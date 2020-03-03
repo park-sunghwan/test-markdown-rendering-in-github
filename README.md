@@ -1,6 +1,6 @@
-# Relayo
+# Relayo Onboarding process
 
-## Install Python Packages
+## 1. Install Python Packages
 ```
 $ cd relayo
 $ virtualenv env
@@ -8,7 +8,7 @@ $ source env/bin/activate
 $ pip install -r requirements/development.txt
 ```
 
-#### You will encounter errors while installing requirements
+#### !!! You will encounter errors while installing requirements
 
 ```
 If `core/utils.c:3866:18: error: passing an object that undergoes default argument promotion to 'va_start' has undefined behavior [-Werror,-Wvarargs]` error raise on 'pip install', change uwsgi version: 2.0.11.2 -> 2.0.15 (it is only development env on mac 10.14.1)
@@ -19,16 +19,16 @@ As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, i
 
 <br>
 
-## Create Database
+## 2. Create Database
 ```
 $ createdb relayo -E UTF8
 ```
 
 <br>
 
-## Run Migration
+## 3. Run Migration
 
-Before run migration, run below command first on fabric
+Before run migration, run a command below first on fabric
 ```
 $ fab local_only updateconf
 [localhost] Executing task 'local_only'
@@ -49,14 +49,18 @@ $ fab local_only updateconf
 Done.
 ```
 
-NOTE: `local_only updateconf` : copy config files under local `conf` directory
+`local_only updateconf` command copies config files under local `conf` directory.
+
+<br>
+
+And run migrate
 
 ```
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py migrate
 ```
 
-#### You will encounter errors on migration
+#### !!! You will encounter errors on migration
 
 ```
 If `django.contrib.gis.geos.error.GEOSException: Could not parse version info string "3.6.2-CAPI-1.10.2 4d2925d6"` error raise on migration,
@@ -75,24 +79,21 @@ ver = geos_version().split(' ')[0].decode()
 
 <br>
 
-## Create local/development configurations
-```
-$ fab local_only updateconf
-```
-
-<br>
-
-## Run Daemon
+## 4. Run Daemon runserver
 ```
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py runserver
 ```
 
-NOTE: Try to change combu 3.0.26 to 3.0.30 if kombu error raise on execute (only dev env)
+NOTE: Try to update `kombu` from 3.0.26 to 3.0.30 if kombu error raise on execution.(only dev env)
+
+```bash
+$ pip install kombu==3.0.30
+```
 
 <br>
 
-## Run Celery Workers
+## 5. Run Celery Workers
 ```
 $ cd relayo
 $ DJANGO_SETTINGS_MODULE=daemon.main.settings RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
@@ -175,7 +176,7 @@ $ make cleandoc # to clean docs/api
 
 <br>
 
-## Checklist after onboarding
+## 6. Checklist after onboarding
 
 ### Testing Relayo tests
 
@@ -195,7 +196,7 @@ OK (skipped=14)
 
 You should pass all relayo daemon tests except for skipped ones. **Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
 
-
+<br>
 
 ### Create API Client for POS vendor
 

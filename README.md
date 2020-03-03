@@ -183,7 +183,7 @@ $ make cleandoc # to clean docs/api
 
 ### Testing Relayo tests
 
-After installation, **you can be sure that you're onboarding on relayo is successful after passing daemon tests.**  
+After installation, **you can be sure that your onboarding on relayo is successful after passing daemon tests.**  
 Let's check it out right now :)
 
 ```

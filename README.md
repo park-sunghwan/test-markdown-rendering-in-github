@@ -69,7 +69,7 @@ If `django.contrib.gis.geos.error.GEOSException: Could not parse version info st
 modify 'libgeos.py'
 ```
 
-Open `~/.virtualenvs/relayo/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
+Open `{your-virtualenv-path}/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
 
 ```
 # before

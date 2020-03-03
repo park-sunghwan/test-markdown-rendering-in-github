@@ -135,7 +135,7 @@ $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 
 <br>
 
-## Deployment (Fabric)
+## 6. Deployment (Fabric)
 
 #### Fabric Command Lists
 
@@ -179,7 +179,7 @@ $ make cleandoc # to clean docs/api
 
 <br>
 
-## 6. Checklist after onboarding
+## 7. Checklist after onboarding
 
 ### Testing Relayo tests
 

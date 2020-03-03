@@ -2,9 +2,15 @@
 
 * Last modified: 2020-03-03
 
-## 1. Install Python Packages
-```
-$ cd $WORKDIR/relayo
+## 1. Clone repository and install Python Packages
+
+```bash
+# Clone
+$ cd $WORKDIR
+$ git clone git@github.com:yogiyo/relayo.git
+$ cd relayo
+
+# Install packages
 $ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements/development.txt

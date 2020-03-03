@@ -1,14 +1,16 @@
 # Relayo Onboarding process
 
+* Last modified: 2020-03-03
+
 ## 1. Install Python Packages
 ```
-$ cd relayo
+$ cd $WORKDIR/relayo
 $ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements/development.txt
 ```
 
-#### !!! You will encounter errors while installing requirements
+#### !!! You will encounter an error while installing requirements:
 
 ```
 If `core/utils.c:3866:18: error: passing an object that undergoes default argument promotion to 'va_start' has undefined behavior [-Werror,-Wvarargs]` error raise on 'pip install', change uwsgi version: 2.0.11.2 -> 2.0.15 (it is only development env on mac 10.14.1)
@@ -60,7 +62,7 @@ $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py migrate
 ```
 
-#### !!! You will encounter errors on migration
+#### !!! You will encounter an error on migration
 
 ```
 If `django.contrib.gis.geos.error.GEOSException: Could not parse version info string "3.6.2-CAPI-1.10.2 4d2925d6"` error raise on migration,
@@ -84,6 +86,7 @@ ver = geos_version().split(' ')[0].decode()
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py runserver
 ```
+**Don't forget to set `RELAYO_RUN_ENV` env to `local` to runserver on local. You'd better set this variable in Pycharm too.**
 
 NOTE: Try to update `kombu` from 3.0.26 to 3.0.30 if kombu error raise on execution.(only dev env)
 
@@ -167,7 +170,7 @@ $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
   ```
 
 ### Create a class reference document
-The exported class reference document would be located in "<Yor-project-directory>/relayo/docs/api/_build/html/index.html"
+The exported class reference document would be located in `<Yor-project-directory>/relayo/docs/api/_build/html/index.html`
 ```
 $ cd relayo
 $ make doc
@@ -180,7 +183,7 @@ $ make cleandoc # to clean docs/api
 
 ### Testing Relayo tests
 
-After installation, you can be sure that you're onboarding on relayo has succeeded after passing tests.
+After installation, **you can be sure that you're onboarding on relayo is successful after passing daemon tests.**  
 Let's check it out right now :)
 
 ```
@@ -194,7 +197,8 @@ Ran 192 tests in 18.742s
 OK (skipped=14)
 ```
 
-You should pass all relayo daemon tests except for skipped ones. **Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
+You should pass all relayo daemon tests except for skipped ones.  
+**Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
 
 <br>
 

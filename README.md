@@ -7,7 +7,15 @@ $ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements/development.txt
 ```
+
+#### You will encounter errors while installing requirements
+
+```
 If `core/utils.c:3866:18: error: passing an object that undergoes default argument promotion to 'va_start' has undefined behavior [-Werror,-Wvarargs]` error raise on 'pip install', change uwsgi version: 2.0.11.2 -> 2.0.15 (it is only development env on mac 10.14.1)
+```
+As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, install and turn it back again.)
+
+
 
 <br>
 
@@ -48,12 +56,22 @@ $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py migrate
 ```
 
+#### You will encounter errors on migration
+
+```
 If `django.contrib.gis.geos.error.GEOSException: Could not parse version info string "3.6.2-CAPI-1.10.2 4d2925d6"` error raise on migration,
 modify 'libgeos.py'
 ```
-$ emacs ~/.virtualenvs/relayo/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py
+
+Open `~/.virtualenvs/relayo/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
+
 ```
-fix 'geos_version() -> geos_version().split(' ')[0]'
+# before
+ver = geos_version()
+
+# to
+ver = geos_version().split(' ')[0].decode()
+```
 
 <br>
 
@@ -125,15 +143,15 @@ $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 
   Can combine above target, server type and command type
 
-  1. `update` : make target server fetch the latest and go to head, then reload server process
+  * `update` : make target server fetch the latest and go to head, then reload server process
 
-  2. `cutover` : reload nginx @ target with next environment
+  * `cutover` : reload nginx @ target with next environment
 
-  3. `updateconf` : upload config files in `fabfile/confs/{target}` to target hosts
+  * `updateconf` : upload config files in `fabfile/confs/{target}` to target hosts
 
-  4. `local_only updateconf` : copy config files under local `conf` directory
+  * `local_only updateconf` : copy config files under local `conf` directory
 
-  5. `migrate` : apply migrations
+  * `migrate` : apply migrations
 
 #### Examples
   ```
@@ -155,10 +173,32 @@ $ make doc
 $ make cleandoc # to clean docs/api
 ```
 
+<br>
 
-## Relayo Management Commands
+## Checklist after onboarding
+
+### Testing Relayo tests
+
+After installation, you can be sure that you're onboarding on relayo has succeeded after passing tests.
+Let's check it out right now :)
+
+```
+$ cd $WORKDIR/relayo
+$ RELAYO_RUN_ENV=test python daemon/manage.py test daemon --keepdb
+
+...
+...
+Ran 192 tests in 18.742s
+
+OK (skipped=14)
+```
+
+You should pass all relayo daemon tests except for skipped ones. **Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
+
+
 
 ### Create API Client for POS vendor
+
 ```
 $ cd relayo
 $ python daemon/manage.py createapiclient

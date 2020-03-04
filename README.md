@@ -195,9 +195,8 @@ OK (skipped=14)
 You should pass all relayo daemon tests except for skipped ones.  
 **Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
 
-Django creates test databases everytime you run tests and destroy them after the tests.  
-`--keepdb` option preserves test databases and django doesn't recreate them to test next time.  
-But django sometimes ignores this option and create databases when: 
+Django creates test databases everytime you run tests and destroy them after the tests. `--keepdb` option preserves test databases and django doesn't recreate them to test next time.
+But django sometimes ignores this option and create databases when:
   1. Running tests first time in repository.
   2. Any migrations need to be applied.
 

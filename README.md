@@ -1,6 +1,6 @@
 # Relayo Onboarding process
 
-* Last modified: 2020-03-03
+* Last modified: 2020-03-04
 
 ## 1. Clone repository and install Python Packages
 
@@ -24,14 +24,11 @@ If `core/utils.c:3866:18: error: passing an object that undergoes default argume
 As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, install and turn it back again.)
 
 
-<br>
-
 ## 2. Create Database
 ```bash
 $ createdb relayo -E UTF8
 ```
 
-<br>
 
 ## 3. Run Migration
 
@@ -58,7 +55,6 @@ Done.
 
 `local_only updateconf` command copies config files under local `conf` directory.
 
-<br>
 
 And run migrate
 
@@ -81,25 +77,21 @@ Open `{your-virtualenv-path}/lib/python2.7/site-packages/django/contrib/gis/geos
 ver = geos_version()
 
 # to
-ver = geos_version().split(' ')[0].decode()
+ver = geos_version().split()[0]
 ```
-
-<br>
 
 ## 4. Run Daemon runserver
 ```bash
 $ cd relayo
 $ RELAYO_RUN_ENV=local python daemon/manage.py runserver
 ```
-**Don't forget to set `RELAYO_RUN_ENV` env to `local` to runserver on local. You'd better set this variable in Pycharm too.**
+**Don't forget to set `RELAYO_RUN_ENV` env to `local` to run local server. You'd better set this variable in Pycharm too.**
 
 NOTE: Try to update `kombu` from 3.0.26 to 3.0.30 if kombu error raise on execution.(only dev env)
 
 ```bash
 $ pip install kombu==3.0.30
 ```
-
-<br>
 
 ## 5. Run Celery Workers
 
@@ -139,8 +131,6 @@ For dedicated workers for queue `order`.
 $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 ```
 
-<br>
-
 ## 6. Deployment (Fabric)
 
 #### Fabric Command Lists
@@ -176,15 +166,13 @@ $ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
   ```
 
 ### Create a class reference document
-The exported class reference document would be located in `<Yor-project-directory>/relayo/docs/api/_build/html/index.html`
+The exported class reference document would be located in `<Your-project-directory>/relayo/docs/api/_build/html/index.html`
 
 ```bash
 $ cd relayo
 $ make doc
 $ make cleandoc # to clean docs/api
 ```
-
-<br>
 
 ## 7. Checklist after onboarding
 
@@ -207,7 +195,12 @@ OK (skipped=14)
 You should pass all relayo daemon tests except for skipped ones.  
 **Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
 
-<br>
+Django creates test databases everytime you run tests and destroy them after the tests.  
+`--keepdb` option preserves test databases and django doesn't recreate them to test next time.  
+But django sometimes ignores this option and create databases when: 
+  1. Running tests first time in repository.
+  2. Any migrations need to be applied.
+
 
 ### Create API Client for POS vendor
 
@@ -230,8 +223,6 @@ Does POS use terminal protocol? (y/N): N
 | Callback URL   | http://unifos.com/cb                             |
 +----------------+--------------------------------------------------+
 ```
-
-<br>
 
 ## Relayo Redis
 

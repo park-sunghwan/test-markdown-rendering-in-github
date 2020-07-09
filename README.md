@@ -106,7 +106,7 @@ $ poetry run chalice local --stage local  # stage를 local로 설정
 
 chalice를 로컬로 실행한 상태에서 다음 명령어들을 통해 동작상태를 확인한다.
 
-* Simple ping test:
+* #### Simple ping test:
 
 ```shell script
 $ curl -X GET '127.0.0.1:8000/ping/'
@@ -114,7 +114,7 @@ $ curl -X GET '127.0.0.1:8000/ping/'
 pong
 ```
 
-* 주문 상태 등록 예시:
+* #### 주문 상태 등록 예시:
 
 ```shell
 $ curl -X POST -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/' --data '{"origin": "Yogiyo", "target": "Relayo", "status_map": {"filter_expr": ".result.msg, .result.status", "values": ["ok", "success"]}, "status": "SUCCESS"}'

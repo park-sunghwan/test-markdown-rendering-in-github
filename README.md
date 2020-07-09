@@ -1,230 +1,131 @@
-# Relayo Onboarding process
+# Conveyo
 
-* Last modified: 2020-03-04
+* Last modified date: 2020-07-09
 
-## 1. Clone repository and install Python Packages
+T&I 스쿼드의 MSA로서 SNS를 통해 받은 주문을 전달 및 처리한다.
+SNS -> SQS -> Lambda 에서 'SQS -> Lambda' 구간을 담당하며 chalice로 작성되어 있다.
 
-```bash
-# Clone
-$ cd $WORKDIR
-$ git clone git@github.com:yogiyo/relayo.git
-$ cd relayo
 
-# Install packages
-$ virtualenv env
-$ source env/bin/activate
-$ pip install -r requirements/development.txt
+## 1. Poetry 설치
+
+[Poetry](https://python-poetry.org/)는 패키지 매니저로 시스템에 설치 안 되어 있다면 먼저 설치한다. 설치되어 있다면 2번으로.
+
+```shell
+# 가장 권장되는 방법
+$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
 ```
 
-#### !!! You will encounter an error while installing requirements:
+poetry의 실행파일의 위치를 shell 환경설정 파일을 통해 PATH에 추가한다.
 
-```
-If `core/utils.c:3866:18: error: passing an object that undergoes default argument promotion to 'va_start' has undefined behavior [-Werror,-Wvarargs]` error raise on 'pip install', change uwsgi version: 2.0.11.2 -> 2.0.15 (it is only development env on mac 10.14.1)
-```
-As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, install and turn it back again.)
-
-
-## 2. Create Database
-```bash
-$ createdb relayo -E UTF8
+```shell
+export PATH=$PATH:$HOME/.poetry/bin
 ```
 
 
-## 3. Run Migration
+## 2. Conveyo 설치
 
-Before run migration, run a command below first on fabric
-```bash
-$ fab local_only updateconf
-[localhost] Executing task 'local_only'
-[localhost] Executing task 'updateconf'
-[localhost] local: cp fabfile/confs/local/daemon.py daemon/main/settings/local.py
-[localhost] local: cp fabfile/confs/local/ygybe.py libs/helpers/ygybe/conf/local.py
-[localhost] local: cp fabfile/confs/local/worker.py workers/conf/local.py
-[localhost] local: cp fabfile/confs/staging/daemon.py daemon/main/settings/staging.py
-[localhost] local: cp fabfile/confs/staging/ygybe.py libs/helpers/ygybe/conf/staging.py
-[localhost] local: cp fabfile/confs/staging/worker.py workers/conf/staging.py
-[localhost] local: cp fabfile/confs/test/daemon.py daemon/main/settings/test.py
-[localhost] local: cp fabfile/confs/test/ygybe.py libs/helpers/ygybe/conf/test.py
-[localhost] local: cp fabfile/confs/test/worker.py workers/conf/test.py
-[localhost] local: cp fabfile/confs/production/daemon.py daemon/main/settings/production.py
-[localhost] local: cp fabfile/confs/production/ygybe.py libs/helpers/ygybe/conf/production.py
-[localhost] local: cp fabfile/confs/production/worker.py workers/conf/production.py
+* Repo 클론
 
-Done.
+```shell
+cd $WORKDIR
+git clone git@github.com:yogiyo/conveyo.git
+cd conveyo
 ```
 
-`local_only updateconf` command copies config files under local `conf` directory.
+* 가상환경 생성 및 라이브러리 설치
+
+Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
+참고로 현재 conveyo의 파이썬 버전은 3.7로 향후 3.8로 업그레이드할 예정.  
+
+```shell
+$ poetry install
 
 
-And run migrate
+  The currently activated Python version 2.7.16 is not supported by the project (^3.7).
+  Trying to find and use a compatible version.
+  Using python3 (3.7.6)
+  Creating virtualenv conveyo-ptXzqI0E-py3.7 in 특정경로
+  Installing dependencies from lock file
 
-```bash
-$ cd relayo
-$ RELAYO_RUN_ENV=local python daemon/manage.py migrate
-```
 
-#### !!! You will encounter an error on migration
+  Package operations: 57 installs, 0 updates, 0 removals
 
-```
-If `django.contrib.gis.geos.error.GEOSException: Could not parse version info string "3.6.2-CAPI-1.10.2 4d2925d6"` error raise on migration,
-modify 'libgeos.py'
-```
-
-Open `{your-virtualenv-path}/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
-
-```python
-# before
-ver = geos_version()
-
-# to
-ver = geos_version().split()[0]
-```
-
-## 4. Run Daemon runserver
-```bash
-$ cd relayo
-$ RELAYO_RUN_ENV=local python daemon/manage.py runserver
-```
-**Don't forget to set `RELAYO_RUN_ENV` env to `local` to run local server. You'd better set this variable in Pycharm too.**
-
-NOTE: Try to update `kombu` from 3.0.26 to 3.0.30 if kombu error raise on execution.(only dev env)
-
-```bash
-$ pip install kombu==3.0.30
-```
-
-## 5. Run Celery Workers
-
-```bash
-$ cd $WORKDIR/relayo
-$ DJANGO_SETTINGS_MODULE=daemon.main.settings RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
-```
-
-With logging,
-```bash
-$ export RELAYO_RUN_ENV=local
-$ export LOGGER_LOG_LEVEL=DEBUG
-$ python -m workers.app worker -l info
-```
-
-To enable file logging, set following env variables.
-```bash
-export LOGGER_LOG_PATH=/path/to/log_file.log
-export LOGGER_VERBOSE_LOG_PATH=/path/to/verbose_log_file.log
-```
-
-To enable rsyslog, you need to prepare log path with the proper permission.
-```bash
-$ mkdir -p /opt/relayo
-$ chown syslog:adm -R /opt/relayo
-```
-
-And then, set env `LOGGER_USE_SYSLOG` to `true` before running celery workers.
-```bash
-$ export LOGGER_USE_SYSLOG=true
-$ RELAYO_RUN_ENV=local python -m workers.app worker
+    - Installing six (1.12.0)
+    - Installing docutils (0.14)
+  ...
 ```
 
 
-For dedicated workers for queue `order`.
-```bash
-$ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
+## 3. Redis 설정
+
+Conveyo는 데이터베이스로 Redis를 사용한다. 따라서 로컬에서 개발하고 테스트하기 위해서는 docker Redis 설정을 해줘야 한다.   
+Conveyo 설치 전에 Yogiyo\_Web을 도커로 먼저 설치했을 것이고 그러면 YGY Redis 인스턴스가 이미 6379 Redis default 포트를 점유하고 있을 것이다. 따라서 Conveyo 용으로는 다른 포트를 사용한다.
+
+* 코드에서 Redis instance를 호출할 때 사용할 환경변수를 설정한다.
+
+자신의 쉘의 설정 파일을 열어 다음을 추가한다.  
+
+```shell
+# conveyo redis settings
+export REDIS_HOST=127.0.0.1
+export REDIS_PORT=6378  # port를 6379가 아닌 6378로 설정
+export REDIS_DB=0
 ```
 
-## 6. Deployment (Fabric)
+* Redis 도커 컨테이너를 로드한다.
 
-#### Fabric Command Lists
-
-  - Deployment Targets: `production`, `staging`
-
-  - Command Types: `update`, `cutover`
-
-#### Process
-
-  Can combine above target, server type and command type
-
-  * `update` : make target server fetch the latest and go to head, then reload server process
-
-  * `cutover` : reload nginx @ target with next environment
-
-  * `updateconf` : upload config files in `fabfile/confs/{target}` to target hosts
-
-  * `local_only updateconf` : copy config files under local `conf` directory
-
-  * `migrate` : apply migrations
-
-#### Examples
-  ```
-  $ cd relayo
-  $ fab staging:api update          # update API server @ staging
-  $ fab staging:worker update       # update workers @ staging
-  $ fab staging update              # update both servers @ staging
-  $ fab staging:api cutover         # cutover API server @ staging
-  $ fab staging:worker cutover      # cutover worker server @ staging
-  $ fab staging cutover             # cutover API server @ staging
-  # fab production update cutover   # update & cutover both servers @ production
-  ```
-
-### Create a class reference document
-The exported class reference document would be located in `<Your-project-directory>/relayo/docs/api/_build/html/index.html`
-
-```bash
-$ cd relayo
-$ make doc
-$ make cleandoc # to clean docs/api
+```shell
+$ cd local_dev
+$ docker-compose up -d
+$ cd ..
 ```
 
-## 7. Checklist after onboarding
+* docker Redis가 제대로 연결되는지 확인한다.
 
-### Testing Relayo tests
+```shell script
+$ poetry run python -c 'import os, redis; redis_instance = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT")); print(redis_instance.ping())'
 
-After installation, **you can be sure that your onboarding on relayo is successful after passing daemon tests.**  
-Let's check it out right now :)
-
-```bash
-$ cd $WORKDIR/relayo
-$ RELAYO_RUN_ENV=test python daemon/manage.py test daemon --keepdb
-
-...
-...
-Ran 192 tests in 18.742s
-
-OK (skipped=14)
+True
 ```
 
-You should pass all relayo daemon tests except for skipped ones.  
-**Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
 
-Django creates test databases everytime you run tests and destroy them after the tests. `--keepdb` option preserves test databases and django doesn't recreate them to test next time.
-But django sometimes ignores this option and create databases when:
-  1. Running tests first time in repository.
-  2. Any migrations need to be applied.
+## 4. chalice 어플리케이션 local 환경에서 실행
 
+Conveyo는 웹어플리케이션으로 Django를 사용하지 않는다. 대신 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
 
-### Create API Client for POS vendor
+* 로컬 환경에서 chalice 실행
 
-```bash
-$ cd relayo
-$ python daemon/manage.py createapiclient
+`chalice local` 수행시 '--stage local' 을 추가하여 local redis를 쓴다.
 
-Franchise Name: BHC-Chiken
-Franchise code: UNITAS-BHC
-Franchise Callback URL (blank if not available): http://unifos.com/cb
-Is POS responsible? (Y/n): Y
-Does POS use terminal protocol? (y/N): N
-+----------------+--------------------------------------------------+
-| FIELD          | VALUE                                            |
-+----------------+--------------------------------------------------+
-| Franchise Name | BHC-Chiken                                       |
-| Franchise Code | UNITAS-BHC                                       |
-| API key        | aca2ecd958b04ca39283f6f5a949d06b                 |
-| API Secret     | 17117ffd758e9f8dc88c135d2385323b9c34737cb51efb94 |
-| Callback URL   | http://unifos.com/cb                             |
-+----------------+--------------------------------------------------+
+```shell
+$ poetry run chalice local --stage local  # stage를 local로 설정
 ```
 
-## Relayo Redis
 
-Redis: 5.0.3
+## 5. local 테스트
 
-NOTE: django-constance use db '0'
+chalice를 로컬로 실행한 상태에서 다음 명령어들을 통해 동작상태를 확인한다.
+
+* Simple ping test:
+
+```shell script
+$ curl -X GET '127.0.0.1:8000/ping/'
+
+pong
+```
+
+* 주문 상태 등록 예시:
+
+```shell
+$ curl -X POST -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/' --data '{"origin": "Yogiyo", "target": "Relayo", "status_map": {"filter_expr": ".result.msg, .result.status", "values": ["ok", "success"]}, "status": "SUCCESS"}'
+
+{"result": "Success"}
+```
+
+* 등록된 상태 조회:
+
+```shell script
+$ curl -X GET -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/?origin=Yogiyo&target=Relayo'
+
+"origin": "Yogiyo", "target": "Relayo", "status_map": {".result.msg,.result.status": [[["ok", "success"], "SUCCESS"]]}}
+```

@@ -1,9 +1,8 @@
 # Conveyo
 
-* Last modified date: 2020-07-09
+* Last modified date: 2020-07-10
 
-T&I 스쿼드의 MSA로서 SNS를 통해 받은 주문을 전달 및 처리한다.
-SNS -> SQS -> Lambda 에서 'SQS -> Lambda' 구간을 담당하며 chalice로 작성되어 있다.
+T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.
 
 
 ## 1. Poetry 설치
@@ -55,6 +54,22 @@ $ poetry install
   ...
 ```
 
+## 3. direnv 설치
+
+[direnv](https://direnv.net/)는 프로젝트(디렉토리)별로 환경변수를 설정/해제할 수 있는 도구로 현재 Redis 환경변수 등을 설정할 때 사용하고 있다.
+
+```shell
+$ brew install direnv
+```
+
+#### direnv hook을 걸어준다. 
+
+```shell
+eval "$(direnv hook zsh)" >> ~/.zshrc  # 쉘마다 조금씩 다르며 'https://direnv.net/docs/hook.html'를 참고
+```
+
+shell을 재시작한다.
+
 
 ## 3. Redis 설정
 
@@ -63,13 +78,23 @@ Conveyo 설치 전에 Yogiyo\_Web을 도커로 먼저 설치했을 것이고 그
 
 * #### 코드에서 Redis instance를 호출할 때 사용할 환경변수를 설정한다.
 
-자신의 쉘의 설정 파일을 열어 다음을 추가한다.  
+conveyo 디렉토리의 `.envrc` 파일을 열어 다음을 추가한다.
 
 ```shell
 # conveyo redis settings
 export REDIS_HOST=127.0.0.1
-export REDIS_PORT=6378  # port를 6379가 아닌 6378로 설정
+export REDIS_PORT=6378
 export REDIS_DB=0
+```
+
+* #### .envrc에 추가된 환경변수를 이 디렉토리 내에서 허용한다.
+
+```shell
+$ direnv allow .
+
+direnv: reloading
+direnv: loading .envrc
+direnv export: ...
 ```
 
 * #### Redis 도커 컨테이너를 로드한다.
@@ -77,7 +102,6 @@ export REDIS_DB=0
 ```shell
 $ cd local_dev
 $ docker-compose up -d
-$ cd ..
 ```
 
 * #### docker Redis가 제대로 연결되는지 확인한다.

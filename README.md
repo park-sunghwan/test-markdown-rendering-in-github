@@ -1,8 +1,8 @@
 # Conveyo
 
-* Last modified date: 2020-07-10
+* Last modified date: 2020-07-14
 
-T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.
+**T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.**
 
 
 ## 1. Poetry 설치
@@ -54,48 +54,8 @@ $ poetry install
   ...
 ```
 
-## 3. direnv 설치
 
-[direnv](https://direnv.net/)는 프로젝트(디렉토리)별로 환경변수를 설정/해제할 수 있는 도구로 현재 Redis 환경변수 등을 설정할 때 사용하고 있다.
-
-```shell
-$ brew install direnv
-```
-
-#### direnv hook을 걸어준다. 
-
-```shell
-eval "$(direnv hook zsh)" >> ~/.zshrc  # 쉘마다 조금씩 다르며 'https://direnv.net/docs/hook.html'를 참고
-```
-
-shell을 재시작한다.
-
-
-## 3. Redis 설정
-
-Conveyo는 데이터베이스로 Redis를 사용한다. 따라서 로컬에서 개발하고 테스트하기 위해서는 docker Redis 설정을 해줘야 한다.  
-Conveyo 설치 전에 Yogiyo\_Web을 도커로 먼저 설치했을 것이고 그러면 YGY Redis 인스턴스가 이미 6379 Redis default 포트를 점유하고 있을 것이다. 따라서 Conveyo 용으로는 다른 포트를 사용한다.
-
-* #### 코드에서 Redis instance를 호출할 때 사용할 환경변수를 설정한다.
-
-conveyo 디렉토리의 `.envrc` 파일을 열어 다음을 추가한다.
-
-```shell
-# conveyo redis settings
-export REDIS_HOST=127.0.0.1
-export REDIS_PORT=6378
-export REDIS_DB=0
-```
-
-* #### .envrc에 추가된 환경변수를 이 디렉토리 내에서 허용한다.
-
-```shell
-$ direnv allow .
-
-direnv: reloading
-direnv: loading .envrc
-direnv export: ...
-```
+## 3. Redis 컨테이너 로드
 
 * #### Redis 도커 컨테이너를 로드한다.
 
@@ -106,8 +66,10 @@ $ docker-compose up -d
 
 * #### docker Redis가 제대로 연결되는지 확인한다.
 
-```shell script
-$ poetry run python -c 'import os, redis; redis_instance = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT")); print(redis_instance.ping())'
+conveyo redis는 YGY redis 포트와 겹치지 않도록 다른 포트(6378)를 사용하고 있다.
+
+```shell
+$ poetry run python -c 'import redis; redis_instance = redis.Redis(host="127.0.0.1", port="6378"); print(redis_instance.ping())'
 
 True
 ```
@@ -115,14 +77,14 @@ True
 
 ## 4. chalice 어플리케이션 local 환경에서 실행
 
-Conveyo는 웹어플리케이션으로 Django를 사용하지 않는다. 대신 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
+conveyo는 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
 
 * #### 로컬 환경에서 chalice 실행
 
-`chalice local` 수행시 '--stage local' 을 추가하여 local redis를 쓴다.
+`chalice local` 수행시 '--stage local' 을 추가하여 local stage를 사용한다.
 
 ```shell
-$ poetry run chalice local --stage local  # stage를 local로 설정
+$ poetry run chalice local --stage local
 ```
 
 
@@ -132,7 +94,7 @@ chalice를 로컬로 실행한 상태에서 다음 명령어들을 통해 동작
 
 * #### Simple ping test:
 
-```shell script
+```shell
 $ curl -X GET '127.0.0.1:8000/ping/'
 
 pong
@@ -148,7 +110,7 @@ $ curl -X POST -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-s
 
 * #### 등록된 상태 조회:
 
-```shell script
+```shell
 $ curl -X GET -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/?origin=Yogiyo&target=Relayo'
 
 "origin": "Yogiyo", "target": "Relayo", "status_map": {".result.msg,.result.status": [[["ok", "success"], "SUCCESS"]]}}

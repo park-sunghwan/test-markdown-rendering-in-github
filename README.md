@@ -1,6 +1,6 @@
 # Conveyo
 
-* Last modified date: 2020-07-14
+* Last modified date: 2020-07-17
 
 **T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.**
 
@@ -34,9 +34,9 @@ cd conveyo
 * #### pyenv로 가상환경 생성
 
 현재 Conveyo의 파이썬 버전은 3.7로 로컬 파이썬 버전이 3.7대가 아니라면 [pyenv](https://github.com/pyenv/pyenv)를 설치하고 파이썬 버전을 관리하는 것을 추천한다.  
-pyenv는 복수의 파이썬 버전을 손쉽게 switch 할 수 있도록 도와주는 프로그램으로, 가상환경 생성을 위해서는 추가로 [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv)까지 설치해준다.  
+**pyenv는 복수의 파이썬 버전을 손쉽게 switch 할 수 있도록 도와주는 프로그램으로, pyenv를 통해 가상환경까지 생성하기 위해서는 추가로 [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv)까지 설치해준다.**    
 
-이후 가상환경을 설정한다.
+이후 가상환경을 생성한다.
 
 conveyo의 파이썬 버전에 맞는 가상환경을 생성한다.
 
@@ -66,6 +66,8 @@ $ poetry install
     - Installing docutils (0.14)
   ...
 ```
+
+이후 poetry를 사용하면 이때 생성된 가상환경을 자동으로 인식한다.
 
 
 ## 3. Redis 컨테이너 로드

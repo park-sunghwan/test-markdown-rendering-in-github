@@ -21,7 +21,7 @@ export PATH=$PATH:$HOME/.poetry/bin
 ```
 
 
-## 2. Conveyo 설치
+## 2. Conveyo 및 가상환경 생성
 
 * #### Repo 클론
 
@@ -31,18 +31,31 @@ git clone git@github.com:yogiyo/conveyo.git
 cd conveyo
 ```
 
-* #### 가상환경 생성 및 라이브러리 설치
+* #### pyenv로 가상환경 생성
 
-Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
-참고로 현재 conveyo의 파이썬 버전은 3.7로 향후 3.8로 업그레이드할 예정.  
+현재 Conveyo의 파이썬 버전은 3.7로 로컬 파이썬 버전이 3.7대가 아니라면 [pyenv](https://github.com/pyenv/pyenv)를 설치하고 파이썬 버전을 관리하는 것을 추천한다.  
+pyenv는 복수의 파이썬 버전을 손쉽게 switch 할 수 있도록 도와주는 프로그램으로, 가상환경 생성을 위해서는 추가로 [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv)까지 설치해준다.  
+
+이후 가상환경을 설정한다.
+
+conveyo의 파이썬 버전에 맞는 가상환경을 생성한다.
 
 ```shell
+$ pyenv install 3.7.5  # micro version은 임의
+$ pyenv virtualenv 3.7.5 conveyo-venv
+```
+
+파이썬 binary path를 가상환경의 파이썬으로 맞춘 뒤 패키지를 설치한다. 이때 poetry용 가상환경이 생성된다.  
+Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
+
+```shell
+$ pyenv shell conveyo-venv
 $ poetry install
 
 
   The currently activated Python version 2.7.16 is not supported by the project (^3.7).
   Trying to find and use a compatible version.
-  Using python3 (3.7.6)
+  Using python3 (3.7.5)
   Creating virtualenv conveyo-ptXzqI0E-py3.7 in 특정경로
   Installing dependencies from lock file
 
@@ -66,7 +79,7 @@ $ docker-compose up -d
 
 * #### docker Redis가 제대로 연결되는지 확인한다.
 
-conveyo redis는 YGY redis 포트와 겹치지 않도록 다른 포트(6378)를 사용하고 있다.
+local 환경일 때 Conveyo redis는 기존에 설치한 YGY redis 포트와 겹치지 않도록 다른 포트(6378)를 사용하고 있다.
 
 ```shell
 $ poetry run python -c 'import redis; redis_instance = redis.Redis(host="127.0.0.1", port="6378"); print(redis_instance.ping())'
@@ -77,7 +90,7 @@ True
 
 ## 4. chalice 어플리케이션 local 환경에서 실행
 
-conveyo는 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
+Conveyo는 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
 
 * #### 로컬 환경에서 chalice 실행
 

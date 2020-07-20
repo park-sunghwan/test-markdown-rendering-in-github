@@ -1,6 +1,6 @@
 # Conveyo
 
-* Last modified date: 2020-07-17
+* Last modified date: 2020-07-20
 
 **T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.**
 
@@ -50,21 +50,8 @@ Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 
 
 ```shell
 $ pyenv shell conveyo-venv
-$ poetry install
-
-
-  The currently activated Python version 2.7.16 is not supported by the project (^3.7).
-  Trying to find and use a compatible version.
-  Using python3 (3.7.5)
-  Creating virtualenv conveyo-ptXzqI0E-py3.7 in 특정경로
-  Installing dependencies from lock file
-
-
-  Package operations: 57 installs, 0 updates, 0 removals
-
-    - Installing six (1.12.0)
-    - Installing docutils (0.14)
-  ...
+$ poetry env use $(pyenv which python)  # 가상환경 생성
+$ poetry install  # 가상환경 내 패키지 install
 ```
 
 이후 poetry를 사용하면 이때 생성된 가상환경을 자동으로 인식한다.

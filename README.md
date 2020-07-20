@@ -42,12 +42,15 @@ conveyo의 파이썬 버전에 맞는 파이썬을 설치한다.
 $ pyenv install 3.7.5  # micro version은 임의
 ```
 
+Poetry는 가상환경 생성 및 관리도 지원한다. 가상환경을 생성하기 전, pyenv를 사용해 파이썬을 3.7로 전환해서 프로젝트에서 사용할 파이썬 버전을 지목한다.  
 Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
 
 ```shell
-$ pyenv shell 3.7.5
-$ poetry install
+$ pyenv shell 3.7.5  # 3.7.5 버전을 사용하도록 지목
+$ poetry install     # 가상환경 생성 및 패키지 설치
 ```
+
+이후 poetry를 사용할 때 `pyenv shell...`를 입력하지 않아도 생성된 가상환경이 자동으로 사용된다.
 
 
 ## 3. Redis 컨테이너 로드

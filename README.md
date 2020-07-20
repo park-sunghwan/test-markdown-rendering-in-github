@@ -21,7 +21,7 @@ export PATH=$PATH:$HOME/.poetry/bin
 ```
 
 
-## 2. Conveyo 및 가상환경 생성
+## 2. Conveyo 설치 및 가상환경 생성
 
 * #### Repo 클론
 
@@ -31,30 +31,23 @@ git clone git@github.com:yogiyo/conveyo.git
 cd conveyo
 ```
 
-* #### pyenv로 가상환경 생성
+* #### pyenv로 파이썬 설치
 
 현재 Conveyo의 파이썬 버전은 3.7로 로컬 파이썬 버전이 3.7대가 아니라면 [pyenv](https://github.com/pyenv/pyenv)를 설치하고 파이썬 버전을 관리하는 것을 추천한다.  
-**pyenv는 복수의 파이썬 버전을 손쉽게 switch 할 수 있도록 도와주는 프로그램으로, pyenv를 통해 가상환경까지 생성하기 위해서는 추가로 [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv)까지 설치해준다.**    
+**pyenv는 복수의 파이썬 버전을 손쉽게 설치 & 전환할 수 있도록 도와주는 프로그램이다.**
 
-이후 가상환경을 생성한다.
-
-conveyo의 파이썬 버전에 맞는 가상환경을 생성한다.
+conveyo의 파이썬 버전에 맞는 파이썬을 설치한다.
 
 ```shell
 $ pyenv install 3.7.5  # micro version은 임의
-$ pyenv virtualenv 3.7.5 conveyo-venv
 ```
 
-파이썬 binary path를 가상환경의 파이썬으로 맞춘 뒤 패키지를 설치한다. 이때 poetry용 가상환경이 생성된다.  
 Poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
 
 ```shell
-$ pyenv shell conveyo-venv
-$ poetry env use $(pyenv which python)  # 가상환경 생성
-$ poetry install  # 가상환경 내 패키지 install
+$ pyenv shell 3.7.5
+$ poetry install
 ```
-
-이후 poetry를 사용하면 이때 생성된 가상환경을 자동으로 인식한다.
 
 
 ## 3. Redis 컨테이너 로드

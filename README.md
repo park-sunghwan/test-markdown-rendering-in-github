@@ -58,7 +58,26 @@ $ pyenv shell 3.7.5  # 3.7.5 버전을 사용하도록 지목
 $ poetry install     # 가상환경 생성 및 패키지 설치
 ```
 
-이후 poetry를 사용할 때는 `pyenv shell...`를 입력하지 않아도 생성된 가상환경이 자동으로 사용된다.
+* #### 가상환경을 로드한다.
+
+```shell
+$ poetry shell
+
+Spawning shell within /Users/a202002010/Library/Caches/pypoetry/virtualenvs/conveyo-ptXzqI0E-py3.7
+
+(conveyo-ptXzqI0E-py3.7) $
+```
+
+* #### pre-commit script 설치
+
+pre-commit은 범용적인 precommit git hook manager로, conveyo는 pre-commit을 사용해 다양한 git hook 작업을 관리하고 있다.
+pre-commit에 정의된 hook을 실제 git hook에 설치한다.
+
+```shell
+(conveyo-ptXzqI0E-py3.7) $ pre-commit install
+```
+
+이후로는 commit마다 작업분에 대해 정의된 git hook이 자동으로 실행된다.
 
 
 ## 3. Redis 컨테이너 로드
@@ -75,7 +94,7 @@ $ docker-compose up -d
 local 환경일 때 Conveyo redis는 기존에 설치한 YGY redis 포트와 겹치지 않도록 다른 포트(6378)를 사용하고 있다.
 
 ```shell
-$ poetry run python -c 'import redis; redis_instance = redis.Redis(host="127.0.0.1", port="6378"); print(redis_instance.ping())'
+(conveyo-ptXzqI0E-py3.7) $ python -c 'import redis; redis_instance = redis.Redis(host="127.0.0.1", port="6378"); print(redis_instance.ping())'
 
 True
 ```
@@ -90,7 +109,7 @@ Conveyo는 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, �
 `chalice local` 수행시 '--stage local' 을 추가하여 local stage를 사용한다.
 
 ```shell
-$ poetry run chalice local --stage local
+(conveyo-ptXzqI0E-py3.7) $ chalice local --stage local
 ```
 
 
@@ -125,9 +144,9 @@ $ curl -X GET -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-st
 * #### pytest 전체 테스트
 
 ```shell
-$ poetry run pytest
+(conveyo-ptXzqI0E-py3.7) $ poetry run pytest
 
-rootdir: /Users/a202002010/workspace/conveyo, inifile:
+rootdir: /Users/a2020202020/workspace/conveyo, inifile:
 collected 61 items
 
 chalicelib/hubyo/test_hubyo.py ..

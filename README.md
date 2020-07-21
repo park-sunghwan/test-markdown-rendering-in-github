@@ -1,8 +1,12 @@
 # Conveyo
 
-* Last modified date: 2020-07-20
+* Last modified date: 2020-07-21
 
-**T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하며 chalice로 작성되어 있다.**
+**T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하는 역할을 한다.**
+
+* Python: 3.7.*
+* Web framework: Chalice
+* Database: Redis
 
 
 ## 1. Poetry 설치
@@ -44,7 +48,9 @@ $ pyenv install 3.7.5  # micro version은 임의
 
 * #### 가상환경 생성 및 패키지 설치
 
-poetry는 가상환경 생성 및 관리도 지원한다. 가상환경을 생성하기 전, pyenv를 사용해 파이썬을 로컬 -> 3.7로 전환해서 프로젝트에서 사용할 파이썬 버전을 지목한다.  
+poetry는 패키지 관리뿐 아니라 가상환경 생성 및 관리도 지원한다. 여기서는 poetry에서 생성되는 가상환경을 쓴다.
+
+pyenv를 사용해 파이썬을 로컬 -> 3.7로 전환해서 프로젝트에 맞는 파이썬 버전을 지목한다.  
 poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
 
 ```shell
@@ -114,4 +120,18 @@ $ curl -X POST -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-s
 $ curl -X GET -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/?origin=Yogiyo&target=Relayo'
 
 "origin": "Yogiyo", "target": "Relayo", "status_map": {".result.msg,.result.status": [[["ok", "success"], "SUCCESS"]]}}
+```
+
+* #### pytest 전체 테스트
+
+```shell
+$ poetry run pytest
+
+rootdir: /Users/a202002010/workspace/conveyo, inifile:
+collected 61 items
+
+chalicelib/hubyo/test_hubyo.py ..
+...
+
+==== 61 passed, 2 warnings in 0.83 seconds ===
 ```

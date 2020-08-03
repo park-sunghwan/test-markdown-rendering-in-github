@@ -1,175 +1,258 @@
-# Conveyo
+# Relayo Onboarding process
 
+* Last modified: 2020-06-18
 
-`난 하나로 감쌌어요.`  <br>
-``난 두 개로 감쌌는데요?``
+## 1. Clone repository and install Python Packages
 
+```bash
+# Clone
+$ cd $WORKDIR
+$ git clone git@github.com:yogiyo/relayo.git
+$ cd relayo
 
-
-
-
-<br><br>
-<br><br><br><br><br><br><br>
-
-
-
-
-
-
-
-
-
-* Last modified date: 2020-07-21
-
-**T&I 스쿼드의 MSA로서 SNS(Hubyo)를 통해 받은 주문을 전달 및 처리하는 역할을 한다.**
-
-* Python: 3.7.*
-* Web framework: Chalice
-* Database: Redis
-
-
-## 1. Poetry 설치
-
-[Poetry](https://python-poetry.org/)는 패키지 매니저로 시스템에 설치 안 되어 있다면 먼저 설치한다. 설치되어 있다면 2번으로.
-
-```shell
-# 가장 권장되는 방법
-$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+# Install packages
+$ virtualenv env
+$ source env/bin/activate
+$ pip install -r requirements/development.txt
 ```
 
-* #### poetry의 실행파일의 위치를 shell 환경설정 파일을 통해 PATH에 추가한다.
+#### !!! You will encounter an error while installing requirements:
 
-```shell
-export PATH=$PATH:$HOME/.poetry/bin
+```
+If `core/utils.c:3866:18: error: passing an object that undergoes default argument promotion to 'va_start' has undefined behavior [-Werror,-Wvarargs]` error raise on 'pip install', change uwsgi version: 2.0.11.2 -> 2.0.15 (it is only development env on mac 10.14.1)
+```
+As it reads, change `uwsgi` version to 2.0.15.(Change `requirements/base.txt`, install and turn it back again.)
+
+
+## 2. Create Database
+```bash
+$ createdb relayo -E UTF8
 ```
 
+## 3. Run Migration
 
-## 2. Conveyo 설치 및 가상환경 생성
+Before run migration, you have to run some commands below first.
 
-* #### Repo 클론
+* Copy django settings files
 
-```shell
-cd $WORKDIR
-git clone git@github.com:yogiyo/conveyo.git
-cd conveyo
+```bash
+$ fab local_only updateconf
+[localhost] Executing task 'local_only'
+[localhost] Executing task 'updateconf'
+[localhost] local: cp fabfile/confs/local/daemon.py daemon/main/settings/local.py
+[localhost] local: cp fabfile/confs/local/ygybe.py libs/helpers/ygybe/conf/local.py
+[localhost] local: cp fabfile/confs/local/worker.py workers/conf/local.py
+[localhost] local: cp fabfile/confs/staging/daemon.py daemon/main/settings/staging.py
+[localhost] local: cp fabfile/confs/staging/ygybe.py libs/helpers/ygybe/conf/staging.py
+[localhost] local: cp fabfile/confs/staging/worker.py workers/conf/staging.py
+[localhost] local: cp fabfile/confs/test/daemon.py daemon/main/settings/test.py
+[localhost] local: cp fabfile/confs/test/ygybe.py libs/helpers/ygybe/conf/test.py
+[localhost] local: cp fabfile/confs/test/worker.py workers/conf/test.py
+[localhost] local: cp fabfile/confs/production/daemon.py daemon/main/settings/production.py
+[localhost] local: cp fabfile/confs/production/ygybe.py libs/helpers/ygybe/conf/production.py
+[localhost] local: cp fabfile/confs/production/worker.py workers/conf/production.py
+
+Done.
 ```
 
-* #### pyenv로 파이썬 설치
+`local_only updateconf` command copies config files under local `fabfile/conf` directory to daemon/main/settings
 
-현재 Conveyo의 파이썬 버전은 3.7로 로컬 파이썬 버전이 3.7대가 아니라면 [pyenv](https://github.com/pyenv/pyenv)를 설치하고 파이썬 버전을 관리하는 것을 추천한다.  
-**pyenv는 복수의 파이썬 버전을 손쉽게 설치 & 전환할 수 있도록 도와주는 프로그램이다.**
+* If you installed YGY to use targetyo with your employee number for targetyo platform, go to `daemon/main/settings/local.py` and change this part
 
-conveyo의 파이썬 버전에 맞는 파이썬을 설치한다.
+```python
+TARGETYO_PLATFORM_NAME = 'YGY-dev'  # Change it to your employee number if you use staging targetyo on local machine
 
-```shell
-$ pyenv install 3.7.5  # micro version은 임의
+# change this part as follows with your employee number:
+
+TARGETYO_PLATFORM_NAME = 'YGY-A20202020'
 ```
 
-* #### 가상환경 생성 및 패키지 설치
+* And run migrate
 
-poetry는 패키지 관리뿐 아니라 가상환경 생성 및 관리도 지원한다. 여기서는 poetry에서 생성되는 가상환경을 쓴다.
-
-pyenv를 사용해 파이썬을 로컬 -> 3.7로 전환해서 프로젝트에 맞는 파이썬 버전을 지목한다.  
-poetry는 `pyproject.toml`에 지정된 파이썬 버전을 자동으로 찾아 가상환경을 생성하고 패키지를 설치한다.(`poetry.lock`이 있으면 대신 사용)  
-
-```shell
-$ pyenv shell 3.7.5  # 3.7.5 버전을 사용하도록 지목
-$ poetry install     # 가상환경 생성 및 패키지 설치
+```bash
+$ cd relayo
+$ RELAYO_RUN_ENV=local python daemon/manage.py migrate
 ```
 
-* #### 가상환경을 로드한다.
+#### !!! You will encounter an error on migration
 
-```shell
-$ poetry shell
-
-Spawning shell within /Users/a202002010/Library/Caches/pypoetry/virtualenvs/conveyo-ptXzqI0E-py3.7
-
-(conveyo-ptXzqI0E-py3.7) $
+```
+If `django.contrib.gis.geos.error.GEOSException: Could not parse version info string "3.6.2-CAPI-1.10.2 4d2925d6"` error raise on migration,
+modify 'libgeos.py'
 ```
 
-* #### pre-commit script 설치
+Open `{your-virtualenv-path}/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py` and change line number 144 as follows:
 
-pre-commit은 범용적인 precommit git hook manager로, conveyo는 pre-commit을 사용해 다양한 git hook 작업을 관리하고 있다.
-pre-commit에 정의된 hook을 실제 git hook에 설치한다.
+```python
+# before
+ver = geos_version()
 
-```shell
-(conveyo-ptXzqI0E-py3.7) $ pre-commit install
-```
-
-이후로는 commit마다 작업분에 대해 정의된 git hook이 자동으로 실행된다.
-
-
-## 3. Redis 컨테이너 로드
-
-* #### Redis 도커 컨테이너를 로드한다.
-
-```shell
-$ cd local_dev
-$ docker-compose up -d
-```
-
-* #### docker Redis가 제대로 연결되는지 확인한다.
-
-local 환경일 때 Conveyo redis는 기존에 설치한 YGY redis 포트와 겹치지 않도록 다른 포트(6378)를 사용하고 있다.
-
-```shell
-(conveyo-ptXzqI0E-py3.7) $ python -c 'import redis; redis_instance = redis.Redis(host="127.0.0.1", port="6378"); print(redis_instance.ping())'
-
-True
+# to
+ver = geos_version().split()[0]
 ```
 
 
-## 4. chalice 어플리케이션 local 환경에서 실행
+## 4. Generate local environment variables
 
-Conveyo는 AWS Lambda를 사용해 서버리스 어플리케이션을 생성, 배포하는 파이썬 프레임워크인 `Chalice`를 사용한다.
+You have to set local environment variables to run local server(it works same as Yogiyo_Web)
+Check it out `fabfile.__init__.py`
 
-* #### 로컬 환경에서 chalice 실행
+```bash
+$ fab generate_local_env
 
-`chalice local` 수행시 '--stage local' 을 추가하여 local stage를 사용한다.
-
-```shell
-(conveyo-ptXzqI0E-py3.7) $ chalice local --stage local
+[localhost] Executing task 'generate_local_env'
+[localhost] Executing task 'generate_env'
+Download local env to /Users/{your-number}/workspace/relayo/fabfile/../.env.new
+[localhost] local: diff -uN /Users/{your-number}/workspace/relayo/fabfile/../.env /Users/{your-number}/workspace/relayo/fabfile/../.env.new || true
+[localhost] local: mv /Users/{your-number}/workspace/relayo/fabfile/../.env.new /Users/{your_number}/workspace/relayo/fabfile/../.env
 ```
 
 
-## 5. local 테스트
+## 5. Run Daemon runserver
+```bash
+$ cd relayo
+$ RELAYO_RUN_ENV=local python daemon/manage.py runserver
+```
+**Don't forget to set `RELAYO_RUN_ENV` env to `local` to run local server. You'd better set this variable in Pycharm too.**
 
-chalice를 로컬로 실행한 상태에서 다음 명령어들을 통해 동작상태를 확인한다.
+NOTE: Try to update `kombu` from 3.0.26 to 3.0.30 if kombu error raise on execution.(only dev env)
 
-* #### Simple ping test:
-
-```shell
-$ curl -X GET '127.0.0.1:8000/ping/'
-
-pong
+```bash
+$ pip install kombu==3.0.30
 ```
 
-* #### 주문 상태 등록 예시:
+## 6. Run Celery Workers
 
-```shell
-$ curl -X POST -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/' --data '{"origin": "Yogiyo", "target": "Relayo", "status_map": {"filter_expr": ".result.msg, .result.status", "values": ["ok", "success"]}, "status": "SUCCESS"}'
-
-{"result": "Success"}
+```bash
+$ cd $WORKDIR/relayo
+$ DJANGO_SETTINGS_MODULE=daemon.main.settings RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
 ```
 
-* #### 등록된 상태 조회:
-
-```shell
-$ curl -X GET -H "Content-Type: application/json" '127.0.0.1:8000/order-relay-status/?origin=Yogiyo&target=Relayo'
-
-"origin": "Yogiyo", "target": "Relayo", "status_map": {".result.msg,.result.status": [[["ok", "success"], "SUCCESS"]]}}
+With logging,
+```bash
+$ export RELAYO_RUN_ENV=local
+$ export LOGGER_LOG_LEVEL=DEBUG
+$ python -m workers.app worker -l info
 ```
 
-* #### pytest 전체 테스트
+To enable file logging, set following env variables.
+```bash
+export LOGGER_LOG_PATH=/path/to/log_file.log
+export LOGGER_VERBOSE_LOG_PATH=/path/to/verbose_log_file.log
+```
 
-```shell
-(conveyo-ptXzqI0E-py3.7) $ poetry run pytest
+To enable rsyslog, you need to prepare log path with the proper permission.
+```bash
+$ mkdir -p /opt/relayo
+$ chown syslog:adm -R /opt/relayo
+```
 
-rootdir: /Users/a2020202020/workspace/conveyo, inifile:
-collected 61 items
+And then, set env `LOGGER_USE_SYSLOG` to `true` before running celery workers.
+```bash
+$ export LOGGER_USE_SYSLOG=true
+$ RELAYO_RUN_ENV=local python -m workers.app worker
+```
 
-chalicelib/hubyo/test_hubyo.py ..
+
+For dedicated workers for queue `order`.
+```bash
+$ RELAYO_RUN_ENV=local python -m workers.app worker -Q q_order_new
+```
+
+## 7. Deployment (Fabric)
+
+#### Fabric Command Lists
+
+  - Deployment Targets: `production`, `staging`
+
+  - Command Types: `update`, `cutover`
+
+#### Process
+
+  Can combine above target, server type and command type
+
+  * `update` : make target server fetch the latest and go to head, then reload server process
+
+  * `cutover` : reload nginx @ target with next environment
+
+  * `updateconf` : upload config files in `fabfile/confs/{target}` to target hosts
+
+  * `local_only updateconf` : copy config files under local `conf` directory
+
+  * `migrate` : apply migrations
+
+#### Examples
+  ```
+  $ cd relayo
+  $ fab staging:api update          # update API server @ staging
+  $ fab staging:worker update       # update workers @ staging
+  $ fab staging update              # update both servers @ staging
+  $ fab staging:api cutover         # cutover API server @ staging
+  $ fab staging:worker cutover      # cutover worker server @ staging
+  $ fab staging cutover             # cutover API server @ staging
+  # fab production update cutover   # update & cutover both servers @ production
+  ```
+
+### Create a class reference document
+The exported class reference document would be located in `<Your-project-directory>/relayo/docs/api/_build/html/index.html`
+
+```bash
+$ cd relayo
+$ make doc
+$ make cleandoc # to clean docs/api
+```
+
+## 7. Checklist after onboarding
+
+### Testing Relayo tests
+
+After installation, **you can be sure that your onboarding on relayo is successful after passing daemon tests.**  
+Let's check it out right now :)
+
+```bash
+$ cd $WORKDIR/relayo
+$ RELAYO_RUN_ENV=test python daemon/manage.py test daemon --keepdb
+
 ...
+...
+Ran 192 tests in 18.742s
 
-==== 61 passed, 2 warnings in 0.83 seconds ===
+OK (skipped=14)
 ```
+
+You should pass all relayo daemon tests except for skipped ones.  
+**Remember, you have to set `RELAYO_RUN_ENV` to `test` for running tests. It applies same when setting pycharm testing configurations.**
+
+Django creates test databases everytime you run tests and destroy them after the tests. `--keepdb` option preserves test databases and django doesn't recreate them to test next time.
+But django sometimes ignores this option and create databases when:
+  1. Running tests first time in repository.
+  2. Any migrations need to be applied.
+
+
+### Create API Client for POS vendor
+
+```bash
+$ cd relayo
+$ python daemon/manage.py createapiclient
+
+Franchise Name: BHC-Chiken
+Franchise code: UNITAS-BHC
+Franchise Callback URL (blank if not available): http://unifos.com/cb
+Is POS responsible? (Y/n): Y
+Does POS use terminal protocol? (y/N): N
++----------------+--------------------------------------------------+
+| FIELD          | VALUE                                            |
++----------------+--------------------------------------------------+
+| Franchise Name | BHC-Chiken                                       |
+| Franchise Code | UNITAS-BHC                                       |
+| API key        | aca2ecd958b04ca39283f6f5a949d06b                 |
+| API Secret     | 17117ffd758e9f8dc88c135d2385323b9c34737cb51efb94 |
+| Callback URL   | http://unifos.com/cb                             |
++----------------+--------------------------------------------------+
+```
+
+## Relayo Redis
+
+Redis: 5.0.3
+
+NOTE: django-constance use db '0'
